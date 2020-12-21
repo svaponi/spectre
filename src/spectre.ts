@@ -9,6 +9,7 @@ enum Keys {
     RESET = 'KeyR',
     PRINT_DEBUG = 'KeyD',
     STOP_CAMERA = 'KeyA',
+    SHOOT = 'KeyS',
     MOVE_FORWARD = 'ArrowUp',
     MOVE_BACKWARD = 'ArrowDown',
     TURN_RIGHT = 'ArrowRight',
@@ -38,10 +39,10 @@ camera.position.x = 0;
 camera.position.y = context.cameraPositionHeight;
 camera.position.z = context.cameraPositionDistance;
 
-const car = new Car();
+const car = new Car(scene);
+
 car.add(camera); // Add the camera object to the pivot object (parent-child relationship)
 camera.lookAt(car.position); // Point camera towards the pivot
-scene.add(car);
 
 const keys = new PressedKeys();
 
@@ -78,6 +79,10 @@ export const animate = function () {
     if (keys.get(Keys.MOVE_BACKWARD)) {
         car._moveBackward(context.speed / 10);
     }
+    if (keys.get(Keys.SHOOT)) {
+        car._shoot();
+    }
+    car.refresh();
     if (keys.get(Keys.STOP_CAMERA)) {
         camera.lookAt(car.position);
     }
