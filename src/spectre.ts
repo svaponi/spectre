@@ -1,12 +1,13 @@
-import * as THREE from 'three'
-import {defineOutput, setControl} from './utils/controls';
+import {setControl, setOutput, toggleControls} from './utils/controls';
 import {camera, renderer, scene} from './utils/initScene';
 import {Car} from './objects/car';
 import {degrees_to_radians, findDeltaXZ, radians_to_degrees, round} from './utils/trigonometry';
 import {PressedKeys} from './utils/pressedKeys';
+import {Level} from './objects/level';
 
 enum Keys {
     RESET = 'KeyR',
+    TOGGLE_CONTROLS = 'KeyC',
     PRINT_DEBUG = 'KeyD',
     STOP_CAMERA = 'KeyA',
     SHOOT = 'KeyS',
@@ -17,34 +18,35 @@ enum Keys {
 }
 
 const context: any = {};
-setControl(context, 'cameraPositionHeight', 3, 0, 10, 1);
+setControl(context, 'cameraPositionHeight', 2, 0, 10, 1);
 setControl(context, 'cameraPositionDistance', 5, 0, 100, 1);
-setControl(context, 'speed', 1, -5, 5, 1);
-setControl(context, 'steerAngle', 3, 1, 10, 1);
-const outputCarPosX = defineOutput('carPosX');
-const outputCarPosY = defineOutput('carPosY');
-const outputCarPosZ = defineOutput('carPosZ');
-const outputCarRotX = defineOutput('carRotX');
-const outputCarRotY = defineOutput('carRotY');
-const outputCarRotZ = defineOutput('carRotZ');
-const outputCameraPosX = defineOutput('cameraPosX');
-const outputCameraPosY = defineOutput('cameraPosY');
-const outputCameraPosZ = defineOutput('cameraPosZ');
+setControl(context, 'speed', 2, -5, 5, 1);
+setControl(context, 'steerAngle', 4, 1, 10, 1);
+const outputCarPosX = setOutput('carPosX');
+const outputCarPosY = setOutput('carPosY');
+const outputCarPosZ = setOutput('carPosZ');
+const outputCarRotX = setOutput('carRotX');
+const outputCarRotY = setOutput('carRotY');
+const outputCarRotZ = setOutput('carRotZ');
+const outputCameraPosX = setOutput('cameraPosX');
+const outputCameraPosY = setOutput('cameraPosY');
+const outputCameraPosZ = setOutput('cameraPosZ');
 
 
-const grid = new THREE.GridHelper(100, 100);
-scene.add(grid);
+const level = new Level(scene);
 
 camera.position.x = 0;
 camera.position.y = context.cameraPositionHeight;
 camera.position.z = context.cameraPositionDistance;
 
-const car = new Car(scene);
+const car = new Car(scene, level);
 
 car.add(camera); // Add the camera object to the pivot object (parent-child relationship)
 camera.lookAt(car.position); // Point camera towards the pivot
 
 const keys = new PressedKeys();
+
+keys.setKeydownHook(Keys.TOGGLE_CONTROLS, () => toggleControls());
 
 keys.setKeyupHook(Keys.STOP_CAMERA, () => {
     car.add(camera);
@@ -62,16 +64,16 @@ keys.setKeydownHook(Keys.STOP_CAMERA, () => {
     camera.lookAt(car.position);
 });
 
-let counter = 0;
-export const animate = function () {
+let lastRefresh = 0;
+export const animate = function (time: number) {
 
     requestAnimationFrame(animate);
 
     if (keys.get(Keys.TURN_RIGHT)) {
-        car.rotateY(-degrees_to_radians(context.steerAngle));
+        car._steerRight(degrees_to_radians(context.steerAngle));
     }
     if (keys.get(Keys.TURN_LEFT)) {
-        car.rotateY(degrees_to_radians(context.steerAngle));
+        car._steerLeft(degrees_to_radians(context.steerAngle));
     }
     if (keys.get(Keys.MOVE_FORWARD)) {
         car._moveForward(context.speed / 10);
@@ -80,9 +82,8 @@ export const animate = function () {
         car._moveBackward(context.speed / 10);
     }
     if (keys.get(Keys.SHOOT)) {
-        car._shoot();
+        car._shoot(time);
     }
-    car.refresh();
     if (keys.get(Keys.STOP_CAMERA)) {
         camera.lookAt(car.position);
     }
@@ -97,7 +98,8 @@ export const animate = function () {
         car.position.z = 0;
     }
 
-    if (counter % 10 == 0) {
+    if (time - lastRefresh >= 200) {
+        lastRefresh = time;
         outputCameraPosX(camera.position.x);
         outputCameraPosY(camera.position.y);
         outputCameraPosZ(camera.position.z);
@@ -109,8 +111,10 @@ export const animate = function () {
         outputCarRotZ(`${round(car.rotation.z)} ${round(radians_to_degrees(car.rotation.z))}`);
     }
 
+    car.refresh(time);
+    level.refresh(time);
+
     camera.position.y = context.cameraPositionHeight;
 
     renderer.render(scene, camera);
-    counter++
 };

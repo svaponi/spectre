@@ -7,7 +7,7 @@ function createElement(tag, attributes) {
 }
 
 function appendControlBlock(name) {
-    let controls = document.querySelector(`#controls`);
+    let controls = document.getElementById('controls');
     if (!controls) {
         controls = createElement('div', {id: 'controls'});
         document.appendChild(controls);
@@ -20,7 +20,18 @@ function appendControlBlock(name) {
     return block;
 }
 
-export const defineOutput = function (name) {
+export const toggleControls = function () {
+    let controls = document.getElementById('controls');
+    if (controls) {
+        if (controls.style.display === "none") {
+            controls.style.display = "block";
+        } else {
+            controls.style.display = "none";
+        }
+    }
+};
+
+export const setOutput = function (name) {
     const block = appendControlBlock(name);
     const label = createElement('label', {
         class: 'label'
@@ -32,39 +43,6 @@ export const defineOutput = function (name) {
     block.appendChild(label);
     block.appendChild(spanForValue);
     return (value) => spanForValue.innerHTML = value;
-};
-
-export const defineControl = function (name, value, min, max, step, callback) {
-    const block = appendControlBlock(name);
-    const resetBtn = createElement('input', {
-        type: 'button',
-        value: 'reset',
-        class: 'reset-btn'
-    });
-    const slider = createElement('input', {
-        type: 'range',
-        value,
-        max,
-        min,
-        step,
-        class: 'slider'
-    });
-    const label = createElement('label', {
-        class: 'label'
-    });
-    label.innerHTML = `${name} = `;
-    const spanForValue = createElement('span', {
-        class: 'value'
-    });
-    spanForValue.innerHTML = value;
-    block.appendChild(resetBtn);
-    block.appendChild(slider);
-    block.appendChild(label);
-    block.appendChild(spanForValue);
-    slider.addEventListener("input", (e) => {
-        spanForValue.innerHTML = e.target.value;
-        callback(e.target.value)
-    });
 };
 
 export const setControl = function (context, name, value, min, max, step) {

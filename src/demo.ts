@@ -55,7 +55,7 @@ const triangles = new THREE.Mesh(geometry4, new THREE.MeshBasicMaterial({
 }));
 triangles.rotation.z = Math.PI / 4;
 
-const wall = new Wall(3, 3, {color: 0xff9900});
+const wall = new Wall(3, 3, 0xff9900);
 
 const obj = new THREE.Object3D();
 obj.add(wall);
