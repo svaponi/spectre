@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {defineOutput, setControl} from './utils/controls';
-import {camera, copyCamera, renderer, scene} from './utils/initScene';
+import {camera, renderer, scene} from './utils/initScene';
 import {Car} from './objects/car';
 import {degrees_to_radians, findDeltaXZ, radians_to_degrees, round} from './utils/trigonometry';
 import {PressedKeys} from './utils/pressedKeys';
@@ -39,26 +39,26 @@ camera.position.y = context.cameraPositionHeight;
 camera.position.z = context.cameraPositionDistance;
 
 const car = new Car();
-const carCamera = copyCamera(camera);
-car.add(carCamera); // Add the camera object to the pivot object (parent-child relationship)
-carCamera.lookAt(car.position); // Point camera towards the pivot
+car.add(camera); // Add the camera object to the pivot object (parent-child relationship)
+camera.lookAt(car.position); // Point camera towards the pivot
 scene.add(car);
 
 const keys = new PressedKeys();
 
-let selectedCamera = carCamera;
-
 keys.setKeyupHook(Keys.STOP_CAMERA, () => {
-    selectedCamera = carCamera;
+    car.add(camera);
+    camera.position.x = 0;
+    camera.position.z = context.cameraPositionDistance;
+    camera.lookAt(car.position);
 });
 
 keys.setKeydownHook(Keys.STOP_CAMERA, () => {
+    car.remove(camera);
     camera.position.x = car.position.x;
     camera.position.z = car.position.z;
     const delta = findDeltaXZ(car.rotation, context.cameraPositionDistance);
     camera.position.sub(delta);
     camera.lookAt(car.position);
-    selectedCamera = camera;
 });
 
 let counter = 0;
@@ -79,7 +79,7 @@ export const animate = function () {
         car._moveBackward(context.speed / 10);
     }
     if (keys.get(Keys.STOP_CAMERA)) {
-        selectedCamera.lookAt(car.position);
+        camera.lookAt(car.position);
     }
     if (keys.get(Keys.PRINT_DEBUG)) {
         console.log('keys', keys);
@@ -90,13 +90,12 @@ export const animate = function () {
         car.position.x = 0;
         car.position.y = 0;
         car.position.z = 0;
-        selectedCamera = carCamera
     }
 
     if (counter % 10 == 0) {
-        outputCameraPosX(selectedCamera.position.x);
-        outputCameraPosY(selectedCamera.position.y);
-        outputCameraPosZ(selectedCamera.position.z);
+        outputCameraPosX(camera.position.x);
+        outputCameraPosY(camera.position.y);
+        outputCameraPosZ(camera.position.z);
         outputCarPosX(car.position.x);
         outputCarPosY(car.position.y);
         outputCarPosZ(car.position.z);
@@ -105,8 +104,8 @@ export const animate = function () {
         outputCarRotZ(`${round(car.rotation.z)} ${round(radians_to_degrees(car.rotation.z))}`);
     }
 
-    selectedCamera.position.y = context.cameraPositionHeight;
+    camera.position.y = context.cameraPositionHeight;
 
-    renderer.render(scene, selectedCamera);
+    renderer.render(scene, camera);
     counter++
 };
