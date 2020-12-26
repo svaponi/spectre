@@ -54,7 +54,7 @@ export interface GameData {
 export interface Rank {
     name: string;
     score: number;
-    date?: string;
+    date: string;
 }
 
 export enum Keys {

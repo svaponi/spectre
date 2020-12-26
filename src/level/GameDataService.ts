@@ -1,43 +1,24 @@
-import {DB} from './DB';
 import {CollectionUtils} from '../utils/CollectionUtils';
-import {GameData, Rank} from '../model';
+import {Rank} from '../model';
+import {DBRemote} from './DBRemote';
 
 export class GameDataService {
-    private db: DB;
-    private data: GameData;
+    private db: DBRemote;
 
     constructor() {
-        this.db = new DB();
-        this.load();
+        this.db = new DBRemote();
     }
 
-    reset() {
-        this.data = {
-            ranking: []
-        };
-        this.persist();
+    async addRank(rank: Rank) {
+        await this.db.push('ranking', rank)
     }
 
-    load() {
-        this.data = this.db.getObject<GameData>('_gameData');
-        if (!this.data) {
-            this.reset();
+    async getRanking() {
+        const rankingMap = await this.db.read('ranking', 'value');
+        const ranking = [];
+        for (let key in rankingMap) {
+            ranking.push(rankingMap[key]);
         }
-    }
-
-    persist() {
-        if (this.data) {
-            this.db.setObject('_gameData', this.data);
-        }
-    }
-
-    addRank(rank: Rank) {
-        this.load();
-        this.data.ranking.push(rank);
-        this.data.ranking = CollectionUtils.sortBy(this.data.ranking.slice(0, 100), 'score', 'desc');
-    }
-
-    getRanking(): Rank[] {
-        return this.data.ranking;
+        return CollectionUtils.sortBy(ranking.slice(0, 100), 'score', 'desc');
     }
 }

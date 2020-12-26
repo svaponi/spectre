@@ -222,12 +222,11 @@ export class HUD implements Refreshable {
                 if (!name || !name.length) {
                     name = 'unknown'
                 }
-                this.gameDataService.addRank({name: name, score: this.totalScore});
-                this.gameDataService.persist();
+                await this.gameDataService.addRank({name: name, score: this.totalScore, date: new Date().toUTCString()});
                 DomUtils.empty(this.center);
             }
             const elRanking = DomUtils.getOrAppendById('ranking', this.center, {style: 'font-size: 40px; margin: 10px'});
-            const ranks = this.gameDataService.getRanking();
+            const ranks = await this.gameDataService.getRanking();
             for (let i = 0; i < Math.max(1, ranks.length - 5); i += 5) {
                 let ranking = '';
                 for (let rank of ranks.slice(i, Math.min(i + 5, ranks.length))) {
