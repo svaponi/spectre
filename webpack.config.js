@@ -7,6 +7,7 @@ module.exports = {
         new CopyPlugin({
             patterns: [
                 "static",
+                "package.json",
             ],
         }),
     ],

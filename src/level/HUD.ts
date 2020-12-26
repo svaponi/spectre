@@ -4,9 +4,7 @@ import {Flag} from '../objects/Flag';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
 import {GameDataService} from './GameDataService';
 import {PRESSED_KEYS} from './PRESSED_KEYS';
-
-// @ts-ignore
-const pjson = require('../../package.json');
+import * as $ from 'jquery';
 
 export class HUD implements Refreshable {
 
@@ -28,7 +26,6 @@ export class HUD implements Refreshable {
 
     private lastParams: LevelParams;
     private help = '';
-    private version = pjson.version;
 
     constructor() {
         this.tr = DomUtils.getOrAppendById('hud-top-right', document.body, {class: 'hud'});
@@ -43,7 +40,12 @@ export class HUD implements Refreshable {
         if (!this.bl) throw new Error('missing hud-bottom-left');
         if (!this.center) throw new Error('missing hud-center');
 
-        DomUtils.getOrAppendById('version', this.br, {style: 'font-size: 24px; margin: 10px; color: #666'}).innerHTML = `v${this.version}`;
+        const self = this;
+        $.getJSON('/package.json', function (pkgJson) {
+            if (pkgJson.version) {
+                DomUtils.getOrAppendById('version', self.br, {style: 'font-size: 24px; margin: 10px; color: #666'}).innerHTML = `v${pkgJson.version}`;
+            }
+        });
 
         this.help = `
         movement: &#8593 &#8595 &#8592 &#8594<br>
