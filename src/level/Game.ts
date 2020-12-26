@@ -222,7 +222,7 @@ export class Game extends THREE.Object3D implements Refreshable {
             const intersection = this.findFirstInterception(this.car, this.elements, pr.position);
             if (intersection) {
 
-                console.log('intersection', intersection);
+                console.debug('intersection', intersection);
 
                 if (intersection.target instanceof Wall) {
                     this.wallCollision(intersection.target, pr);

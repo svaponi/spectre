@@ -9,7 +9,6 @@ class PressedKeys extends Map<string, boolean> {
 
     constructor() {
         super();
-        console.log('Create PRESSED_KEYS');
         const self = this;
         window.onkeydown = window.onkeyup = function (e) {
             console.debug('Key event', e.type, e.code);

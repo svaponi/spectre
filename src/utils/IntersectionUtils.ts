@@ -72,7 +72,6 @@ export class IntersectionUtils {
         });
         geometries = geometries.filter((item) => !!item);
         obj.userData.geometries = geometries;
-        console.log('geometries', obj.name, geometries);
         return geometries;
     }
 }

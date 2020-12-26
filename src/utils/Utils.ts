@@ -10,10 +10,10 @@ export class Utils {
     static dispose2(obj: Object3D) {
         obj.traverse((child) => {
             if (child instanceof Geometry) {
-                console.log('dispose Geometry', child);
+                console.debug('dispose Geometry', child);
                 child.dispose();
             } else if (child instanceof Material) {
-                console.log('dispose Material', child);
+                console.debug('dispose Material', child);
                 child.dispose();
             }
         });
