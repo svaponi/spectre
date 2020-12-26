@@ -26,9 +26,7 @@ module.exports = {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
     },
-    // watchOptions: {
-    //     aggregateTimeout: 200,
-    //     poll: 1000
-    // },
-    watch: true
+    devServer: {
+        contentBase: './dist',
+    }
 };
