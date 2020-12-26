@@ -44,17 +44,68 @@ export class ColorUtils {
         }
     }
 
+    static toColor(color: Color | string | number): Color {
+        if (color instanceof Color) {
+            return color;
+        } else {
+            return new Color(color);
+        }
+    }
+
+    static hsl(color: Color | string | number, h: number, s: number, l: number) {
+        const c = new Color(color);
+        const hsl = {h: 0, s: 0, l: 0};
+        c.getHSL(hsl);
+        if (l) {
+            hsl.h += h;
+            hsl.h -= Math.floor(hsl.h);
+        }
+        if (l) {
+            hsl.s += s;
+            hsl.s -= Math.floor(hsl.s);
+        }
+        if (l) {
+            hsl.l += l;
+            hsl.l -= Math.floor(hsl.l);
+        }
+        c.setHSL(hsl.h, hsl.s, hsl.l);
+        return c;
+    }
+
     static setColor(obj: any, color: Color | string | number, recursive = false) {
-        if (recursive)
+        if (recursive) {
             Utils.recursiveConsumer(obj, (o) => ColorUtils._setColor(o, color));
-        else
+        } else {
             ColorUtils._setColor(obj, color)
+        }
+    }
+
+    static getColor(obj: any, recursive = false): Color | string | number {
+        if (recursive) {
+            let color;
+            Utils.recursiveConditionalConsumer(obj, (o) => {
+                color = ColorUtils._getColor(o);
+                return !color;
+            });
+            return color;
+        } else {
+            return ColorUtils._getColor(obj)
+        }
     }
 
     private static _setColor(obj: any, color: Color | string | number) {
         if (obj.material && obj.material instanceof Material) {
             ColorUtils.setMaterialColor(obj.material, color);
         }
+    }
+
+    private static _getColor(obj: any): Color | string | number | null {
+        if (obj.material && obj.material instanceof Material) {
+            if (obj.material instanceof MeshBasicMaterial) {
+                return obj.material.color;
+            }
+        }
+        return null;
     }
 
     static setMaterialColor(material: Material | Material[], color: Color | string | number) {

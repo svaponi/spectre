@@ -1,12 +1,27 @@
 import * as THREE from 'three'
-import {setControl} from './utils/controls';
-import {camera, renderer, scene} from './utils/initScene';
 import {Wall} from './objects/wall';
+import {Controls} from './level/controls';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera();
+const renderer = new THREE.WebGLRenderer({antialias: true});
+document.body.appendChild(renderer.domElement);
+
+// resize
+const windowResizeHanlder = () => {
+    const {innerHeight, innerWidth} = window;
+    renderer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+};
+windowResizeHanlder();
+window.addEventListener('resize', windowResizeHanlder);
 
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
     color: 0x00ff99
 }));
+
 
 const points = [];
 points.push(new THREE.Vector3(-1, 0, 0));
@@ -55,7 +70,7 @@ const triangles = new THREE.Mesh(geometry4, new THREE.MeshBasicMaterial({
 }));
 triangles.rotation.z = Math.PI / 4;
 
-const wall = new Wall(3, 3, 0xff9900);
+const wall = new Wall(3, 3, {color: 0xff9900});
 
 const obj = new THREE.Object3D();
 obj.add(wall);
@@ -65,16 +80,16 @@ obj.add(cube);
 scene.add(obj);
 
 const config: any = {};
+const controls = new Controls(config);
+controls.initControl('cameraPositionZ', 3, 1, 10, 1);
+controls.initControl('x', 0, -1, 1, 0.1);
+controls.initControl('y', 0, -1, 1, 0.1);
+controls.initControl('z', 0, -1, 1, 0.1);
+controls.initControl('scaleCube', 1, 0, 5, 0.1);
+controls.initControl('scaleDiamond', 1, 0, 5, 0.1);
 
-setControl(config, 'cameraPositionZ', 3, 1, 10, 1);
-setControl(config, 'x', 0, -1, 1, 0.1);
-setControl(config, 'y', 0, -1, 1, 0.1);
-setControl(config, 'z', 0, -1, 1, 0.1);
-setControl(config, 'scaleCube', 1, 0, 5, 0.1);
-setControl(config, 'scaleDiamond', 1, 0, 5, 0.1);
-
-config.set_x(0.1);
-config.set_y(0.01);
+config.setX(0.1);
+config.setY(0.01);
 // config.set_z(0.1);
 
 const AXES = ['x', 'y', 'z'];
