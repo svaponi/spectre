@@ -109,3 +109,6 @@ dist
 
 # any build
 build/
+
+# Firebase
+.firebase/
