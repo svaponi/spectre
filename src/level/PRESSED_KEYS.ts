@@ -1,11 +1,15 @@
-function toKey(type: string, code: string) {
+type EventType =
+    | 'keyup'
+    | 'keydown';
+
+function toKey(type: EventType, code: string) {
     return `${type}:${code}`;
 }
 
 class PressedKeys extends Map<string, boolean> {
 
     private hooks = new Map<string, Function[]>();
-    private allowedKeyCodes: string[] = [];
+    private allowedKey: string = null;
 
     constructor() {
         super();
@@ -26,7 +30,7 @@ class PressedKeys extends Map<string, boolean> {
         };
     }
 
-    private runHooks(type: string, code: string) {
+    private runHooks(type: EventType, code: string) {
         const hooks = this.getHooks(type, code);
         if (hooks.length) {
             const toRemove = [];
@@ -46,9 +50,9 @@ class PressedKeys extends Map<string, boolean> {
         }
     }
 
-    private getHooks(type: string, code: string): Function[] {
+    private getHooks(type: EventType, code: string): Function[] {
         const key = toKey(type, code);
-        if (this.allowKeyCode(key)) {
+        if (this.allowKey(key)) {
             let hooks = this.hooks.get(key);
             if (hooks && hooks.length) {
                 console.debug('Get hooks', type, code, hooks);
@@ -58,12 +62,12 @@ class PressedKeys extends Map<string, boolean> {
         return [];
     }
 
-    private setHooks(type: string, code: string, hooks: Function[]) {
+    private setHooks(type: EventType, code: string, hooks: Function[]) {
         this.hooks.set(toKey(type, code), hooks);
         console.debug('Set hooks', type, code, hooks, this.hooks);
     }
 
-    public addHook(type: string, code: string, fun: Function) {
+    public addHook(type: EventType, code: string, fun: Function) {
         let hooks = this.getHooks(type, code);
         hooks.push(fun);
         console.debug('Add event hook', type, code, hooks);
@@ -94,15 +98,15 @@ class PressedKeys extends Map<string, boolean> {
 
     public waitForKey(keyCode = 'Enter'): Promise<void> {
         const self = this;
-        this.allowedKeyCodes = [keyCode];
+        this.allowedKey = toKey('keyup', keyCode);
         return new Promise(resolve => self.addKeyupHookRunOnlyOnce(keyCode, () => {
             resolve();
-            this.allowedKeyCodes = null;
+            self.allowedKey = null;
         }));
     }
 
-    private allowKeyCode(key: string) {
-        return this.allowedKeyCodes == null || this.allowedKeyCodes.length == 0 || this.allowedKeyCodes.includes(key);
+    private allowKey(keyCode: string) {
+        return this.allowedKey == null || this.allowedKey == keyCode;
     }
 }
 
