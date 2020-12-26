@@ -1,7 +1,15 @@
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: './src/index.ts',
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                "static",
+            ],
+        }),
+    ],
     module: {
         rules: [
             {
