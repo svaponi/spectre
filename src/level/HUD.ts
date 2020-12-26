@@ -222,18 +222,22 @@ export class HUD implements Refreshable {
                 if (!name || !name.length) {
                     name = 'unknown'
                 }
-                await this.gameDataService.addRank({name: name, score: this.totalScore, date: new Date().toUTCString()});
+                await this.gameDataService.addRank({name: name, score: this.totalScore, levelName: this.lastParams.levelName, date: new Date().toUTCString()});
                 DomUtils.empty(this.center);
             }
             const elRanking = DomUtils.getOrAppendById('ranking', this.center, {style: 'font-size: 40px; margin: 10px'});
             const ranks = await this.gameDataService.getRanking();
-            for (let i = 0; i < Math.max(1, ranks.length - 5); i += 5) {
-                let ranking = '';
-                for (let rank of ranks.slice(i, Math.min(i + 5, ranks.length))) {
-                    ranking += `${rank.name.slice(0, 12).padEnd(12, '.')}...${rank.score.toString().padStart(12, '.')}<br/>`;
-                }
-                elRanking.innerHTML = ranking;
+            let ranking = '';
+            ranking += `<table style="width: 600px; margin: auto; font-size: 40px">`;
+            for (let rank of ranks.slice(0, Math.min(10, ranks.length))) {
+                ranking += `<tr>`;
+                ranking += `<td style="text-align: left">${rank.name.slice(0, 12)}</td>`;
+                ranking += `<td style="text-align: center">level ${rank.levelName}</td>`;
+                ranking += `<td style="text-align: right">${rank.score}</td>`;
+                ranking += `<tr>`;
             }
+            ranking += `</table>`;
+            elRanking.innerHTML = ranking;
             const elContinue = DomUtils.getOrAppendById('continue', this.center, {style: 'font-size: 24px; margin: 10px'});
             elContinue.innerText = `press ENTER to continue`;
             await DomUtils.blink(elContinue, 3);

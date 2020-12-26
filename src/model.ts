@@ -54,6 +54,7 @@ export interface GameData {
 export interface Rank {
     name: string;
     score: number;
+    levelName: string;
     date: string;
 }
 
