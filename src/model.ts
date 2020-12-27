@@ -71,6 +71,8 @@ export enum Keys {
 
     YOU_LOSE = 'KeyK',
 
+    CAMERA_ZOOM_UP = '',
+    CAMERA_ZOOM_DOWN = '',
     CAMERA_HEIGHT_UP = 'KeyQ',
     CAMERA_HEIGHT_DOWN = 'KeyZ',
     CAMERA_DISTANCE_UP = 'KeyW',

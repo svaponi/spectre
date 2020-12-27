@@ -92,7 +92,7 @@ export class Controls {
     };
 
     add(name: string, delta = 1) {
-        this.toSetter(name)(this.context[name] + delta);
+        this.toSetter(name)(parseFloat(this.context[name]) + delta);
     }
 
     set(name: string, newValue: number) {
@@ -100,7 +100,8 @@ export class Controls {
     }
 
     private toSetter(name: string): (number) => void {
-        return this.context['set' + name.charAt(0).toUpperCase() + name.slice(1)];
+        const setter = this.context['set' + name.charAt(0).toUpperCase() + name.slice(1)];
+        return typeof setter === 'function' ? setter : (_val) => console.warn('undefined setter for', name);
     }
 
     private getOrCreateControlBlock(name): HTMLElement {

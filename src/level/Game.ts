@@ -89,6 +89,8 @@ export class Game extends THREE.Object3D implements Refreshable {
 
         // to detect pressed keys
         const game = this;
+        this.keys.addKeydownHook(Keys.CAMERA_ZOOM_UP, () => this.controls.add('cameraZoom', 1));
+        this.keys.addKeydownHook(Keys.CAMERA_ZOOM_DOWN, () => this.controls.add('cameraZoom', -1));
         this.keys.addKeydownHook(Keys.CAMERA_HEIGHT_UP, () => this.controls.add('cameraPositionHeight', 1));
         this.keys.addKeydownHook(Keys.CAMERA_HEIGHT_DOWN, () => this.controls.add('cameraPositionHeight', -1));
         this.keys.addKeydownHook(Keys.CAMERA_DISTANCE_UP, () => this.controls.add('cameraPositionDistance', 1));
@@ -178,12 +180,12 @@ export class Game extends THREE.Object3D implements Refreshable {
         let cameraPivot = this.car.position;
         if (this.context.cameraZoom < 0) {
         } else if (this.context.cameraZoom == 0) {
-            this.context.setCameraPositionHeight(0.5);
-            this.context.setCameraPositionDistance(-1);
+            this.controls.set('cameraPositionHeight', 0.5);
+            this.controls.set('cameraPositionDistance', -1);
             cameraPivot = this.car.position.clone().add(TrigonometryUtils.findDeltaXZ(this.car.rotation, 100));
         } else {
-            this.context.setCameraPositionHeight(this.context.cameraZoom);
-            this.context.setCameraPositionDistance(this.context.cameraZoom * Math.max(3, 6 - this.context.cameraZoom));
+            this.controls.set('cameraPositionHeight', this.context.cameraZoom);
+            this.controls.set('cameraPositionDistance', this.context.cameraZoom * Math.max(3, 6 - this.context.cameraZoom));
         }
         this.camera.position.x = 0;
         this.camera.position.y = this.context.cameraPositionHeight;
