@@ -240,6 +240,7 @@ export class Game extends THREE.Object3D implements Refreshable {
                     const wall = intersection.target;
                     AUDIO.playCollisionFX();
                     this.wallCollision(wall, pr);
+                    this.hud.wallCollision(wall);
                     const color = ColorUtils.getColor(wall, true);
                     ColorUtils.setColor(wall, new Color(color).offsetHSL(0, -0.1, 0))
                 } else if (intersection.target instanceof Flag) {

@@ -21,11 +21,11 @@ for (let i = 1; i <= 100; i++) {
     let levelName = `${i}`;
     let levelSize = 20 + (10 * i);
     let noOfWalls = Math.pow(levelSize, 2) / 100;
-    let noOfFlags = 2 + Math.floor(i / 5);
+    let noOfFlags = 2 + Math.floor(i / 4);
     let levelTime = noOfFlags * 10000;
-    let pointsPerFlag = 10 * Math.ceil(i / 5);
-    let carSpeed = 2 + Math.floor(i / 5);
-    let carSteerAngle = 3 + Math.floor(i / 5);
+    let pointsPerFlag = 10 * Math.ceil(i / 4);
+    let carSpeed = 1.9 + (i / 10);
+    let carSteerAngle = 2.9 + (i / 20);
     levels.push({levelName, levelSize, noOfWalls, noOfFlags, levelTime, pointsPerFlag, carSpeed, carSteerAngle})
 }
 const level = new Game(scene, camera, levels);

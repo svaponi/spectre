@@ -8,6 +8,7 @@ import * as $ from 'jquery';
 import {AUDIO} from '../audio/Audio';
 import {CollectionUtils} from '../utils/CollectionUtils';
 import {Color, MathUtils} from 'three';
+import {Wall} from '../objects/Wall';
 
 const RANKING_SIZE = 10;
 
@@ -319,5 +320,9 @@ export class HUD implements Refreshable {
             name = 'unknown'
         }
         return name;
+    }
+
+    wallCollision(_wall: Wall) {
+        this.totalScore -= Math.floor(this.lastParams.pointsPerFlag / 2);
     }
 }
