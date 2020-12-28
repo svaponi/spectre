@@ -5,6 +5,20 @@ import {TrigonometryUtils} from '../utils/TrigonometryUtils';
 import {GameDataService} from './GameDataService';
 import {PRESSED_KEYS} from './PRESSED_KEYS';
 import * as $ from 'jquery';
+import {AUDIO} from '../audio/Audio';
+
+
+export interface CenterTextEffect {
+    text?: string
+    html?: string
+    slideInText?: string
+    blink?: number
+    wait?: number
+    delay?: number
+    waitForKey?: string
+    clear?: boolean
+    clearAll?: boolean
+}
 
 export class HUD implements Refreshable {
 
@@ -75,7 +89,7 @@ export class HUD implements Refreshable {
         this.updateFlags(this.foundFlags, this.lastParams.noOfFlags);
         this.setTime(this.remainingTime);
 
-        this.centerText([{slideInText: `level ${this.lastParams.levelName}`}, {blink: 3}]);
+        this.centerText([{slideInText: `level ${this.lastParams.levelName}`}, {blink: 3}, {clear: true}]);
 
         this.startTime();
     }
@@ -122,13 +136,15 @@ export class HUD implements Refreshable {
 
     }
 
-    async centerText(effects: any[], fontSize = 100) {
-        DomUtils.empty(this.center);
+    async centerText(effects: CenterTextEffect[], fontSize = 100) {
         const el = DomUtils.createElement('div', {style: `font-size: ${fontSize}px; margin: 10px`});
         this.center.appendChild(el);
         for (let effect of effects) {
             if (effect.text) {
-                el.innerHTML = effect.text;
+                el.innerText = effect.text;
+            }
+            if (effect.html) {
+                el.innerHTML = effect.html;
             }
             if (effect.wait) {
                 await DomUtils.wait(effect.wait);
@@ -142,8 +158,14 @@ export class HUD implements Refreshable {
             if (effect.blink) {
                 await DomUtils.blink(el, effect.blink, effect.delay);
             }
+            if (effect.clear) {
+                this.center.removeChild(el);
+            }
+            if (effect.clearAll) {
+                DomUtils.empty(this.center);
+            }
         }
-        this.center.removeChild(el);
+        return Promise.resolve();
     }
 
     foundAFlag(_flag?: Flag) {
@@ -177,18 +199,19 @@ export class HUD implements Refreshable {
         this.stopTime();
         if (this.status == LevelStatus.IN_PROGRESS) {
             this.status = LevelStatus.YOU_WIN;
+            AUDIO.playLevelCompletedFX();
             let timeBonus = 0;
             let levelTime_2 = Math.floor(this.lastParams.levelTime / 2);
             if (this.remainingTime > Math.floor(this.lastParams.levelTime / 2)) {
                 timeBonus += Math.floor((this.remainingTime - levelTime_2) / 1000);
             }
             this.totalScore += timeBonus;
-            const el = DomUtils.getOrAppendById('level-completed', this.center, {style: 'font-size: 100px; margin: 10px'});
-            let text = `level completed!`;
-            if (timeBonus > 0)
-                text += `\ntime bonus ${timeBonus}`;
-            await DomUtils.slideInText(el, text);
-            await DomUtils.blink(el, 3);
+            await this.centerText([{slideInText: `level completed!`}, {wait: 200}]);
+            if (timeBonus > 0) {
+                AUDIO.playBonusFX();
+                await this.centerText([{text: `time bonus ${timeBonus}`}, {blink: 3}], 40);
+            }
+            await this.centerText([{clearAll: true}]);
             this.updateScore();
             if (this.onLevelCompleted) {
                 this.onLevelCompleted();
@@ -200,6 +223,7 @@ export class HUD implements Refreshable {
         this.stopTime();
         if (this.status == LevelStatus.IN_PROGRESS) {
             this.status = LevelStatus.YOU_LOSE;
+            AUDIO.playGameOverFX();
             {
                 const el = DomUtils.getOrAppendById('game-over', this.center, {style: 'font-size: 100px; margin: 10px'});
                 await DomUtils.slideInText(el, `GAME OVER\nscore ${this.totalScore}`);
@@ -207,6 +231,7 @@ export class HUD implements Refreshable {
                 DomUtils.empty(this.center);
             }
             if (this.totalScore > 0) {
+                AUDIO.playRankFX();
                 const el = DomUtils.getOrAppendById('who-are-you', this.center, {style: 'font-size: 100px; margin: 10px'});
                 const label = DomUtils.createElement('div', {style: ''});
                 label.innerText = `your name`;
@@ -249,4 +274,3 @@ export class HUD implements Refreshable {
         }
     }
 }
-

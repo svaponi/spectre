@@ -4,6 +4,7 @@ import {CarShot} from './carShot';
 import {Interceptable, Refreshable} from '../model';
 import {Game} from '../level/game';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
+import {AUDIO} from '../audio/Audio';
 
 const MAX_SHOTS = 5;
 const MIN_SHOT_INTERVAL = 200;
@@ -140,6 +141,7 @@ export class Car extends THREE.Object3D implements Refreshable, Interceptable {
     _shoot(time: number) {
         if (this.shots.length < MAX_SHOTS) {
             if (Math.abs(this.lastShotTime - time) > MIN_SHOT_INTERVAL) {
+                AUDIO.playShotFX();
                 const shot = new CarShot(this, this.game, time, (shot) => {
                     this.shots.splice(this.shots.indexOf(shot), 1);
                 });

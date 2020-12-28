@@ -1,4 +1,7 @@
 import {animate} from './spectre';
 // import {animate} from './demo';
+import * as $ from 'jquery';
 
-requestAnimationFrame(animate);
+$(document).ready(function () {
+    requestAnimationFrame(animate);
+});

@@ -12,6 +12,7 @@ import {Flag} from '../objects/flag';
 import {Wall} from '../objects/wall';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
 import {Utils} from '../utils/Utils';
+import {AUDIO} from '../audio/Audio';
 
 const FREE_CENTER_SIZE = 5;
 const HEIGHT = 1;
@@ -44,6 +45,7 @@ export class Game extends THREE.Object3D implements Refreshable {
     private flags: Flag[] = [];
     private elements: Interceptable[] = [];
     private carPositionBuffer = new CircularBuffer<Pr>(POSITION_BUFFER_SIZE);
+    private pristine: boolean = true;
 
     constructor(scene: Scene, camera: PerspectiveCamera, levelParams: LevelParams[]) {
 
@@ -104,10 +106,22 @@ export class Game extends THREE.Object3D implements Refreshable {
         this.initLevel(0);
     }
 
+    async pressEnterTostart() {
+    }
+
     async initLevel(level: number = this.currentLevel) {
+        if (this.pristine) {
+            await this.hud.centerText([{slideInText: 'Press ENTER to start'}, {waitForKey: 'Enter'}, {clear: true}], 100);
+            AUDIO.preload();
+            AUDIO.playWelcome({startIn: 200});
+            await this.hud.centerText([{slideInText: 'welcome'}, {blink: 3}, {clear: true}], 100);
+            await this.hud.centerText([{clear: true}], 100);
+            this.pristine = false;
+        }
         this.setLevel(level);
         this.drawLevel();
         this.resetCamera();
+        await AUDIO.playDropInFX({waitStart: true});
         this.car.dropIn();
         this.hud.init(this.currentLevelParams);
         this.controls.set('carSpeed', this.currentLevelParams.carSpeed);
@@ -227,21 +241,28 @@ export class Game extends THREE.Object3D implements Refreshable {
                 console.debug('intersection', intersection);
 
                 if (intersection.target instanceof Wall) {
-                    this.wallCollision(intersection.target, pr);
-                    const color = ColorUtils.getColor(intersection.target, true);
-                    ColorUtils.setColor(intersection.target, new Color(color).offsetHSL(0, -0.1, 0))
+                    const wall = intersection.target;
+                    AUDIO.playCollisionFX();
+                    this.wallCollision(wall, pr);
+                    const color = ColorUtils.getColor(wall, true);
+                    ColorUtils.setColor(wall, new Color(color).offsetHSL(0, -0.1, 0))
                 } else if (intersection.target instanceof Flag) {
-                    let index = this.flags.indexOf(intersection.target);
+                    const flag = intersection.target;
+                    let index = this.flags.indexOf(flag);
                     if (index >= 0) {
+                        AUDIO.playFlagFX();
                         this.flags.splice(index, 1);
-                        this.remove(intersection.target);
-                        intersection.target.dispose();
-                        this.hud.foundAFlag(intersection.target);
+                        this.elements.splice(this.elements.indexOf(flag), 1);
+                        this.remove(flag);
+                        flag.dispose();
+                        this.hud.foundAFlag(flag);
                     }
                 }
             }
 
             if (pr.position != null) {
+                const playbackRate = 1 - ((5 - this.context.carSpeed) / 10);
+                AUDIO.playCarMoveFX({playbackRate});
                 this.car.position.copy(pr.position);
             }
             if (pr.rotation != null) {
@@ -255,6 +276,10 @@ export class Game extends THREE.Object3D implements Refreshable {
     private lastOutputRefresh = 0;
 
     refresh(time: number) {
+
+        if (this.pristine) {
+            return;
+        }
 
         if (this.hud.status == LevelStatus.IN_PROGRESS) {
 
@@ -348,7 +373,7 @@ export class Game extends THREE.Object3D implements Refreshable {
         pr.position = VECTOR3_000;
         pr.rotation = new Euler();
         this.car.dropIn();
-        this.hud.centerText([{text: 'collision'}, {blink: 5}], 40);
+        this.hud.centerText([{text: 'collision'}, {blink: 3}, {clear: true}], 100);
     }
 
     private pause(paused: boolean = true) {
