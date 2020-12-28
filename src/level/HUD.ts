@@ -1,4 +1,4 @@
-import {Keys, LevelParams, LevelStatus, Refreshable} from '../model';
+import {Keys, LevelParams, LevelStatus, Rank, Refreshable} from '../model';
 import {DomUtils} from '../utils/domUtils';
 import {Flag} from '../objects/Flag';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
@@ -6,7 +6,10 @@ import {GameDataService} from './GameDataService';
 import {PRESSED_KEYS} from './PRESSED_KEYS';
 import * as $ from 'jquery';
 import {AUDIO} from '../audio/Audio';
+import {CollectionUtils} from '../utils/CollectionUtils';
+import {MathUtils} from 'three';
 
+const RANKING_SIZE = 10;
 
 export interface CenterTextEffect {
     text?: string
@@ -137,14 +140,23 @@ export class HUD implements Refreshable {
     }
 
     async centerText(effects: CenterTextEffect[], fontSize = 100) {
-        const el = DomUtils.createElement('div', {style: `font-size: ${fontSize}px; margin: 10px`});
-        this.center.appendChild(el);
+        const uniqId = `tmp-${MathUtils.randInt(0, Number.MAX_SAFE_INTEGER)}`;
         for (let effect of effects) {
             if (effect.text) {
-                el.innerText = effect.text;
+                const el = DomUtils.getOrAppendById(uniqId, this.center, {style: `font-size: ${fontSize}px; margin: 10px`});
+                el.innerText += effect.text.replace(/\n/, '<br/>');
             }
             if (effect.html) {
+                const el = DomUtils.getOrAppendById(uniqId, this.center, {style: `font-size: ${fontSize}px; margin: 10px`});
                 el.innerHTML = effect.html;
+            }
+            if (effect.slideInText) {
+                const el = DomUtils.getOrAppendById(uniqId, this.center, {style: `font-size: ${fontSize}px; margin: 10px`});
+                await DomUtils.slideInText(el, effect.slideInText, effect.delay);
+            }
+            if (effect.blink) {
+                const el = DomUtils.getOrAppendById(uniqId, this.center, {style: `font-size: ${fontSize}px; margin: 10px`});
+                await DomUtils.blink(el, effect.blink, effect.delay);
             }
             if (effect.wait) {
                 await DomUtils.wait(effect.wait);
@@ -152,14 +164,11 @@ export class HUD implements Refreshable {
             if (effect.waitForKey) {
                 await PRESSED_KEYS.waitForKey(effect.waitForKey);
             }
-            if (effect.slideInText) {
-                await DomUtils.slideInText(el, effect.slideInText, effect.delay);
-            }
-            if (effect.blink) {
-                await DomUtils.blink(el, effect.blink, effect.delay);
-            }
             if (effect.clear) {
-                this.center.removeChild(el);
+                const el = document.getElementById(uniqId);
+                if (el) {
+                    this.center.removeChild(el);
+                }
             }
             if (effect.clearAll) {
                 DomUtils.empty(this.center);
@@ -224,53 +233,63 @@ export class HUD implements Refreshable {
         if (this.status == LevelStatus.IN_PROGRESS) {
             this.status = LevelStatus.YOU_LOSE;
             AUDIO.playGameOverFX();
-            {
-                const el = DomUtils.getOrAppendById('game-over', this.center, {style: 'font-size: 100px; margin: 10px'});
-                await DomUtils.slideInText(el, `GAME OVER\nscore ${this.totalScore}`);
-                await DomUtils.blink(el, 5);
-                DomUtils.empty(this.center);
+            await this.centerText([{clearAll: true}, {slideInText: `GAME OVER\nscore ${this.totalScore}`}, {blink: 5}, {clearAll: true}], 100);
+            let ranking = await this.gameDataService.getRanking();
+            let minScore = 0;
+            if (ranking.length >= RANKING_SIZE) {
+                minScore = CollectionUtils.minBy<Rank>(ranking.slice(0, RANKING_SIZE), 'score').score;
             }
-            if (this.totalScore > 0) {
+            console.debug('min score', minScore);
+            if (this.totalScore > minScore) {
                 AUDIO.playRankFX();
-                const el = DomUtils.getOrAppendById('who-are-you', this.center, {style: 'font-size: 100px; margin: 10px'});
-                const label = DomUtils.createElement('div', {style: ''});
-                label.innerText = `your name`;
-                el.appendChild(label);
-                const input = DomUtils.createElement('input', {
-                    type: 'input',
-                    maxlength: 12,
-                    style: 'width: 400px; height: 50px; font-size: 50px; color: #fff; background-color: #000; border: 1px solid #333; text-align: center'
-                });
-                el.appendChild(input);
-                input.focus();
-                let name = await DomUtils.readInput(input);
-                if (!name || !name.length) {
-                    name = 'unknown'
-                }
-                await this.gameDataService.addRank({name: name, score: this.totalScore, levelName: this.lastParams.levelName, date: new Date().toUTCString()});
+                const name = await this.readName();
+                const newRank = {name: name, score: this.totalScore, levelName: this.lastParams.levelName, date: new Date().toUTCString()};
+                await this.gameDataService.addRank(newRank);
+                ranking.push(newRank);
                 DomUtils.empty(this.center);
             }
-            const elRanking = DomUtils.getOrAppendById('ranking', this.center, {style: 'font-size: 40px; margin: 10px'});
-            const ranks = await this.gameDataService.getRanking();
-            let ranking = '';
-            ranking += `<table style="width: 600px; margin: auto; font-size: 40px">`;
-            for (let rank of ranks.slice(0, Math.min(10, ranks.length))) {
-                ranking += `<tr>`;
-                ranking += `<td style="text-align: left">${rank.name.slice(0, 12)}</td>`;
-                ranking += `<td style="text-align: center">level ${rank.levelName}</td>`;
-                ranking += `<td style="text-align: right">${rank.score}</td>`;
-                ranking += `<tr>`;
-            }
-            ranking += `</table>`;
-            elRanking.innerHTML = ranking;
-            const elContinue = DomUtils.getOrAppendById('continue', this.center, {style: 'font-size: 24px; margin: 10px'});
-            elContinue.innerText = `press ENTER to continue`;
-            await DomUtils.blink(elContinue, 3);
-            await PRESSED_KEYS.waitForKey('Enter');
-            DomUtils.empty(this.center);
+            await this.displayRanking(ranking, RANKING_SIZE);
             if (this.onGameOver) {
                 this.onGameOver();
             }
         }
+    }
+
+    private async displayRanking(ranking: Rank[], size: number) {
+        const rankingSize = Math.min(size, ranking.length);
+        ranking = CollectionUtils.sortBy(ranking, 'score', 'desc');
+        ranking = ranking.slice(0, rankingSize);
+        let counter = 0;
+        let html = `<table style="width: 600px; margin: auto; font-size: 40px">`;
+        for (let rank of ranking) {
+            html += `<tr style="line-height: 40px">`;
+            html += `<td style="text-align: left">${++counter}. ${rank.name.slice(0, 12)}</td>`;
+            html += `<td style="text-align: center">level ${rank.levelName}</td>`;
+            html += `<td style="text-align: right">${rank.score}</td>`;
+            html += `<tr>`;
+        }
+        html += `</table>`;
+        await this.centerText([{html}], 40);
+        await this.centerText([{text: `press ENTER to continue`}, {blink: 3}, {waitForKey: 'Enter'}, {clearAll: true}], 24);
+        return Promise.resolve();
+    }
+
+    private async readName() {
+        const el = DomUtils.getOrAppendById('who-are-you', this.center, {style: 'font-size: 100px; margin: 10px'});
+        const label = DomUtils.createElement('div', {style: ''});
+        label.innerText = `your name`;
+        el.appendChild(label);
+        const input = DomUtils.createElement('input', {
+            type: 'input',
+            maxlength: 12,
+            style: 'width: 400px; height: 50px; font-size: 50px; color: #fff; background-color: #000; border: 1px solid #333; text-align: center'
+        });
+        el.appendChild(input);
+        input.focus();
+        let name = await DomUtils.readInput(input);
+        if (!name || !name.length) {
+            name = 'unknown'
+        }
+        return name;
     }
 }

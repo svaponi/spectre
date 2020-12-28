@@ -106,16 +106,12 @@ export class Game extends THREE.Object3D implements Refreshable {
         this.initLevel(0);
     }
 
-    async pressEnterTostart() {
-    }
-
     async initLevel(level: number = this.currentLevel) {
         if (this.pristine) {
             await this.hud.centerText([{slideInText: 'Press ENTER to start'}, {waitForKey: 'Enter'}, {clear: true}], 100);
             AUDIO.preload();
             AUDIO.playWelcome({startIn: 200});
             await this.hud.centerText([{slideInText: 'welcome'}, {blink: 3}, {clear: true}], 100);
-            await this.hud.centerText([{clear: true}], 100);
             this.pristine = false;
         }
         this.setLevel(level);

@@ -1,4 +1,3 @@
-import {CollectionUtils} from '../utils/CollectionUtils';
 import {Rank} from '../model';
 import {DBRemote} from './DBRemote';
 
@@ -19,6 +18,6 @@ export class GameDataService {
         for (let key in rankingMap) {
             ranking.push(rankingMap[key]);
         }
-        return CollectionUtils.sortBy(ranking.slice(0, 100), 'score', 'desc');
+        return ranking;
     }
 }
