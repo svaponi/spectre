@@ -324,5 +324,6 @@ export class HUD implements Refreshable {
 
     wallCollision(_wall: Wall) {
         this.totalScore -= Math.floor(this.lastParams.pointsPerFlag / 2);
+        this.updateScore();
     }
 }
