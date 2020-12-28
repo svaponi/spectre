@@ -4,6 +4,7 @@ import {Color} from 'three/src/math/Color';
 import {FontUtils} from '../fonts/FontUtils';
 import {MeshBasicMaterialParameters} from 'three/src/materials/MeshBasicMaterial';
 import {Interceptable, Refreshable} from '../model';
+import {Utils} from '../utils/Utils';
 
 export class Wall extends THREE.Object3D implements Interceptable, Refreshable {
 
@@ -39,6 +40,12 @@ export class Wall extends THREE.Object3D implements Interceptable, Refreshable {
         this.add(plane);
 
         this.position.setY(height / 2);
+    }
+
+    dispose() {
+        for (let child of this.children) {
+            Utils.dispose2(child);
+        }
     }
 
     setText(value: string) {

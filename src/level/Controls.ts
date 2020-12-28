@@ -1,5 +1,9 @@
 import {DomUtils} from '../utils/domUtils';
 
+function toSetterName(name: string): string {
+    return 'set' + name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 export class Controls {
     context: any;
     controls: HTMLElement;
@@ -74,7 +78,7 @@ export class Controls {
         block.appendChild(label);
         block.appendChild(spanForValue);
         const setter = (newValue) => {
-            if (newValue < min && newValue > max) {
+            if (newValue < min || newValue > max) {
                 return;
             }
             this.context[name] = newValue;
@@ -86,7 +90,7 @@ export class Controls {
         };
         slider.addEventListener("input", (e) => setter(e.target.value));
         resetBtn.addEventListener("click", () => setter(value));
-        this.context['set' + name.charAt(0).toUpperCase() + name.slice(1)] = setter;
+        this.context[toSetterName(name)] = setter;
         setter(value);
         return setter;
     };
@@ -100,8 +104,10 @@ export class Controls {
     }
 
     private toSetter(name: string): (number) => void {
-        const setter = this.context['set' + name.charAt(0).toUpperCase() + name.slice(1)];
-        return typeof setter === 'function' ? setter : (_val) => console.warn('undefined setter for', name);
+        const setter = this.context[toSetterName(name)];
+        return typeof setter === 'function' ? setter : (_val) => {
+            console.warn('undefined setter for', name);
+        };
     }
 
     private getOrCreateControlBlock(name): HTMLElement {

@@ -3,7 +3,7 @@ import {DomUtils} from '../utils/domUtils';
 import {Flag} from '../objects/Flag';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
 import {GameDataService} from './GameDataService';
-import {PRESSED_KEYS} from './PRESSED_KEYS';
+import {PRESSED_KEYS} from './PressedKeys';
 import * as $ from 'jquery';
 import {AUDIO} from '../audio/Audio';
 import {CollectionUtils} from '../utils/CollectionUtils';

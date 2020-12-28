@@ -1,12 +1,11 @@
 import * as THREE from 'three';
 import {Color, GridHelper, MathUtils, Matrix4, Object3D, PerspectiveCamera, Scene, Vector3} from 'three';
 import {Euler} from 'three/src/math/Euler';
-import {ColorUtils} from '../utils/colorUtils';
 import {CircularBuffer} from '../utils/circularBuffer';
 import {Interceptable, Interception, isRefreshable, Keys, LevelParams, LevelStatus, Pr, Refreshable} from '../model';
 import {Controls} from './controls';
 import {HUD} from './hud';
-import {PRESSED_KEYS} from './PRESSED_KEYS';
+import {PRESSED_KEYS} from './PressedKeys';
 import {Car} from '../objects/car';
 import {Flag} from '../objects/flag';
 import {Wall} from '../objects/wall';
@@ -42,7 +41,6 @@ export class Game extends THREE.Object3D implements Refreshable {
 
     private keys = PRESSED_KEYS;
 
-    private flags: Flag[] = [];
     private elements: Interceptable[] = [];
     private carPositionBuffer = new CircularBuffer<Pr>(POSITION_BUFFER_SIZE);
     private pristine: boolean = true;
@@ -138,6 +136,7 @@ export class Game extends THREE.Object3D implements Refreshable {
 
         // the car
         if (this.car) {
+            Utils.dispose2(this.car);
             this.scene.remove(this.car);
         }
         this.car = new Car(this);
@@ -146,6 +145,7 @@ export class Game extends THREE.Object3D implements Refreshable {
 
         // the grid
         if (this.grid) {
+            Utils.dispose2(this.grid);
             this.scene.remove(this.grid);
         }
         this.grid = new GridHelper(this.currentLevelParams.levelSize, this.currentLevelParams.levelSize);
@@ -181,7 +181,6 @@ export class Game extends THREE.Object3D implements Refreshable {
                 flag.position.setX(MathUtils.randFloatSpread(this.currentLevelParams.levelSize));
                 flag.position.setZ(MathUtils.randFloatSpread(this.currentLevelParams.levelSize));
             } while (this.invalidPosition(flag));
-            this.flags.push(flag);
             this.addElement(flag);
         }
     }
@@ -208,13 +207,30 @@ export class Game extends THREE.Object3D implements Refreshable {
         this.elements.push(element);
     }
 
+    private removeElement(element) {
+        this.remove(element);
+        this.elements.splice(this.elements.indexOf(element), 1);
+    }
+
     private invalidPosition(element: Wall | Flag) {
         if (element instanceof Wall) {
             const distanceFromOriginXZ = Math.sqrt(Math.pow(element.position.x, 2) + Math.pow(element.position.z, 2));
             return FREE_CENTER_SIZE >= distanceFromOriginXZ;
         }
         if (element instanceof Flag) {
-            return this.findFirstInterception(element, this.elements) != null;
+            let interceptionFound = this.findFirstInterception(element, this.elements) != null;
+            if (interceptionFound) {
+                console.log('interception by findFirstInterception');
+                return true;
+            }
+            for (let el of this.elements) {
+                const distanceSquared = element.position.distanceToSquared(el.position);
+                if (distanceSquared <= 2) {
+                    console.log('interception by distanceToSquared');
+                    return true;
+                }
+            }
+            return false;
         }
         throw new Error('unsupported argument');
     }
@@ -238,19 +254,23 @@ export class Game extends THREE.Object3D implements Refreshable {
 
                 if (intersection.target instanceof Wall) {
                     const wall = intersection.target;
-                    AUDIO.playCollisionFX();
-                    this.wallCollision(wall, pr);
-                    this.hud.wallCollision(wall);
-                    const color = ColorUtils.getColor(wall, true);
-                    ColorUtils.setColor(wall, new Color(color).offsetHSL(0, -0.1, 0))
+                    let index = this.elements.indexOf(wall);
+                    if (index >= 0) {
+                        AUDIO.playCollisionFX();
+                        this.removeElement(wall);
+                        wall.dispose();
+                        pr.position = VECTOR3_000;
+                        pr.rotation = new Euler();
+                        this.car.dropIn();
+                        this.hud.centerText([{text: 'collision'}, {blink: 3}, {clear: true}], 100);
+                        this.hud.wallCollision(wall);
+                    }
                 } else if (intersection.target instanceof Flag) {
                     const flag = intersection.target;
-                    let index = this.flags.indexOf(flag);
+                    let index = this.elements.indexOf(flag);
                     if (index >= 0) {
                         AUDIO.playFlagFX();
-                        this.flags.splice(index, 1);
-                        this.elements.splice(this.elements.indexOf(flag), 1);
-                        this.remove(flag);
+                        this.removeElement(flag);
                         flag.dispose();
                         this.hud.foundAFlag(flag);
                     }
@@ -364,13 +384,6 @@ export class Game extends THREE.Object3D implements Refreshable {
 
     isInside(pos: Vector3) {
         return Math.abs(pos.x) < this.currentLevelParams.levelSize / 2 && Math.abs(pos.z) < this.currentLevelParams.levelSize / 2;
-    }
-
-    private wallCollision(_wall: Wall, pr: Pr) {
-        pr.position = VECTOR3_000;
-        pr.rotation = new Euler();
-        this.car.dropIn();
-        this.hud.centerText([{text: 'collision'}, {blink: 3}, {clear: true}], 100);
     }
 
     private pause(paused: boolean = true) {
