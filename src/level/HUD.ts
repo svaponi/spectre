@@ -7,7 +7,7 @@ import {PRESSED_KEYS} from './PRESSED_KEYS';
 import * as $ from 'jquery';
 import {AUDIO} from '../audio/Audio';
 import {CollectionUtils} from '../utils/CollectionUtils';
-import {MathUtils} from 'three';
+import {Color, MathUtils} from 'three';
 
 const RANKING_SIZE = 10;
 
@@ -236,41 +236,69 @@ export class HUD implements Refreshable {
             await this.centerText([{clearAll: true}, {slideInText: `GAME OVER\nscore ${this.totalScore}`}, {blink: 5}, {clearAll: true}], 100);
             let ranking = await this.gameDataService.getRanking();
             let minScore = 0;
+            let maxScore = 0;
+            let currentRank = null;
             if (ranking.length >= RANKING_SIZE) {
-                minScore = CollectionUtils.minBy<Rank>(ranking.slice(0, RANKING_SIZE), 'score').score;
+                minScore = CollectionUtils.minBy<Rank>(ranking, 'score').score;
             }
-            console.debug('min score', minScore);
+            if (ranking.length > 0) {
+                maxScore = CollectionUtils.maxBy<Rank>(ranking, 'score').score;
+            }
+            ranking = CollectionUtils.subList<Rank>(ranking, 0, RANKING_SIZE);
+            console.debug('ranking min/max', minScore, maxScore);
             if (this.totalScore > minScore) {
-                AUDIO.playRankFX();
+                AUDIO.playHiScoreFX();
                 const name = await this.readName();
-                const newRank = {name: name, score: this.totalScore, levelName: this.lastParams.levelName, date: new Date().toUTCString()};
-                await this.gameDataService.addRank(newRank);
-                ranking.push(newRank);
+                currentRank = {name: name, score: this.totalScore, levelName: this.lastParams.levelName, date: new Date().toUTCString()};
+                await this.gameDataService.addRank(currentRank);
+                ranking.push(currentRank);
                 DomUtils.empty(this.center);
+                if (this.totalScore > maxScore) {
+                    AUDIO.playHighestScoreFX();
+                }
+            } else {
+                AUDIO.playLowScoreFX();
             }
-            await this.displayRanking(ranking, RANKING_SIZE);
+            await this.displayRanking(ranking, currentRank, RANKING_SIZE);
+            this.totalScore = 0;
             if (this.onGameOver) {
                 this.onGameOver();
             }
         }
     }
 
-    private async displayRanking(ranking: Rank[], size: number) {
-        const rankingSize = Math.min(size, ranking.length);
+    private async displayRanking(ranking: Rank[], currentRank: Rank, size: number) {
         ranking = CollectionUtils.sortBy(ranking, 'score', 'desc');
-        ranking = ranking.slice(0, rankingSize);
-        let counter = 0;
+        ranking = CollectionUtils.subList<Rank>(ranking, 0, size);
+        let counter = 1;
+        let fontSize = 40;
         let html = `<table style="width: 600px; margin: auto; font-size: 40px">`;
         for (let rank of ranking) {
-            html += `<tr style="line-height: 40px">`;
-            html += `<td style="text-align: left">${++counter}. ${rank.name.slice(0, 12)}</td>`;
+            let id = `rank-${counter}`;
+            if (rank === currentRank) {
+                id = 'current-rank'
+            }
+            html += `<tr style="line-height: 30px; font-size: ${fontSize}px" id="${id}">`;
+            html += `<td style="text-align: left">${counter}. ${rank.name.slice(0, 12)}</td>`;
             html += `<td style="text-align: center">level ${rank.levelName}</td>`;
             html += `<td style="text-align: right">${rank.score}</td>`;
             html += `<tr>`;
+            counter++;
         }
         html += `</table>`;
         await this.centerText([{html}], 40);
+        const currentRankEl = document.getElementById('current-rank');
+        let loop = -1;
+        if (currentRankEl) {
+            currentRankEl.style.fontWeight = 'bold';
+            let fontColor = new Color(0x00ff99);
+            currentRankEl.style.color = `#${fontColor.getHexString()}`;
+            loop = setInterval(() => {
+                currentRankEl.style.color = `#${fontColor.offsetHSL(0.01, 0, 0).getHexString()}`;
+            }, 50);
+        }
         await this.centerText([{text: `press ENTER to continue`}, {blink: 3}, {waitForKey: 'Enter'}, {clearAll: true}], 24);
+        clearInterval(loop);
         return Promise.resolve();
     }
 

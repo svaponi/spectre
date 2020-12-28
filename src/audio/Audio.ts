@@ -2,11 +2,15 @@ enum Sound {
     FLAG_FOUND = 'arcade-8bit.wav',
     CAR_MOVEMENT = 'beebee.wav',
     BONUS = 'bonus.wav',
+    // BONUS = 'timebonus.wav',
     COLLISION = 'collision-v2.wav',
     DROP_IN = 'dropin-v2.wav',
     LEVEL_COMPLETED = 'fantastic.wav',
+    // LEVEL_COMPLETED = 'levelup.wav',
     GAME_OVER = 'game-over.wav',
-    HI_SCORE = 'hi-score.wav',
+    LOW_SCORE = 'nicetry-v2.wav',
+    HI_SCORE = 'youwin.wav',
+    HIGHEST_SCORE = 'topscore.wav',
     SHOT = 'shot.wav',
     WELCOME = 'welcome.wav',
 }
@@ -28,6 +32,7 @@ class AudioService {
         await this.getBuffer(Sound.WELCOME);
         await this.getBuffer(Sound.COLLISION);
         await this.getBuffer(Sound.HI_SCORE);
+        await this.getBuffer(Sound.HIGHEST_SCORE);
         await this.getBuffer(Sound.DROP_IN);
         await this.getBuffer(Sound.BONUS);
         await this.getBuffer(Sound.SHOT);
@@ -44,15 +49,23 @@ class AudioService {
     }
 
     async playGameOverFX(params?: AudioParams) {
-        return this.playSound(Sound.GAME_OVER, {startIn: 500, ...params});
+        return this.playSound(Sound.GAME_OVER, {startIn: 250, ...params});
     }
 
     async playLevelCompletedFX(params?: AudioParams) {
         return this.playSound(Sound.LEVEL_COMPLETED, {gain: (params?.gain || 1) * 0.3, ...params});
     }
 
-    async playRankFX(params?: AudioParams) {
+    async playLowScoreFX(params?: AudioParams) {
+        return this.playSound(Sound.LOW_SCORE, {...params});
+    }
+
+    async playHiScoreFX(params?: AudioParams) {
         return this.playSound(Sound.HI_SCORE, {...params});
+    }
+
+    async playHighestScoreFX(params?: AudioParams) {
+        return this.playSound(Sound.HIGHEST_SCORE, {...params});
     }
 
     async playDropInFX(params?: AudioParams) {

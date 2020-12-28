@@ -12,7 +12,7 @@ export class GameDataService {
         await this.db.push('ranking', rank)
     }
 
-    async getRanking() {
+    async getRanking(): Promise<Rank[]> {
         const rankingMap = await this.db.read('ranking', 'value');
         const ranking = [];
         for (let key in rankingMap) {
