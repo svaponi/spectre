@@ -28,6 +28,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     devServer: {
-        contentBase: './dist',
+        contentBase: path.resolve(__dirname, 'dist'),
+        publicPath: path.resolve(__dirname, 'dist')
     }
 };
