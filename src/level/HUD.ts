@@ -236,6 +236,8 @@ export class HUD implements Refreshable {
             AUDIO.playGameOverFX();
             await this.centerText([{clearAll: true}, {slideInText: `GAME OVER\nscore ${this.totalScore}`}, {blink: 5}, {clearAll: true}], 100);
             let ranking = await this.gameDataService.getRanking();
+            ranking = CollectionUtils.sortBy(ranking, 'score', 'desc');
+            ranking = CollectionUtils.subList<Rank>(ranking, 0, RANKING_SIZE);
             let minScore = 0;
             let maxScore = 0;
             let currentRank = null;
@@ -245,7 +247,6 @@ export class HUD implements Refreshable {
             if (ranking.length > 0) {
                 maxScore = CollectionUtils.maxBy<Rank>(ranking, 'score').score;
             }
-            ranking = CollectionUtils.subList<Rank>(ranking, 0, RANKING_SIZE);
             console.debug('ranking min/max', minScore, maxScore);
             if (this.totalScore > minScore) {
                 AUDIO.playHiScoreFX();
