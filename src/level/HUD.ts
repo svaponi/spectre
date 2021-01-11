@@ -281,7 +281,7 @@ export class HUD implements Refreshable {
                 id = 'current-rank'
             }
             html += `<tr style="line-height: 30px; font-size: ${fontSize}px" id="${id}">`;
-            html += `<td style="text-align: left">${counter}. ${rank.name.slice(0, 12)}</td>`;
+            html += `<td style="text-align: left">${counter}. ${rank.name.slice(0, 12).toLowerCase()}</td>`;
             html += `<td style="text-align: center">level ${rank.levelName}</td>`;
             html += `<td style="text-align: right">${rank.score}</td>`;
             html += `<tr>`;
