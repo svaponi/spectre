@@ -69,6 +69,7 @@ export class HUD implements Refreshable {
         movement: &#8593 &#8595 &#8592 &#8594<br>
         stop camera: ${Keys.STOP_CAMERA}<br>
         pause: ${Keys.PAUSE}<br>
+        exit: ${Keys.EXIT}<br>
         `;
     }
 
@@ -110,6 +111,10 @@ export class HUD implements Refreshable {
             DomUtils.empty(this.center);
             this.startTime();
         }
+    }
+
+    async exit() {
+        await this.centerText([{slideInText: `see you later`}, {blink: 5}, {clear: true}]);
     }
 
     private stopTime() {

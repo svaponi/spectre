@@ -60,6 +60,7 @@ export interface Rank {
 
 export enum Keys {
     PAUSE = 'Space',
+    EXIT = 'Escape',
     SHOOT = 'KeyS',
     STOP_CAMERA = 'KeyA',
     MOVE_FORWARD = 'ArrowUp',

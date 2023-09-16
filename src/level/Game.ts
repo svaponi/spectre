@@ -97,6 +97,7 @@ export class Game extends THREE.Object3D implements Refreshable {
         this.keys.addKeydownHook(Keys.CAMERA_DISTANCE_DOWN, () => this.controls.add('cameraPositionDistance', -1));
         this.keys.addKeydownHook(Keys.TOGGLE_CONTROLS, () => this.controls.toggleControls());
         this.keys.addKeydownHook(Keys.PAUSE, () => game.pause(!this.paused));
+        this.keys.addKeydownHook(Keys.EXIT, () => game.exit());
         this.keys.addKeydownHook(Keys.YOU_LOSE, () => game.hud.gameOver());
         this.keys.addKeydownHook(Keys.STOP_CAMERA, () => game.car.detachCamera());
         this.keys.addKeyupHook(Keys.STOP_CAMERA, () => game.car.attachCamera());
@@ -389,5 +390,11 @@ export class Game extends THREE.Object3D implements Refreshable {
     private pause(paused: boolean = true) {
         this.paused = paused;
         this.hud.pause(paused);
+    }
+
+    private exit() {
+        this.hud.exit().then(() => {
+            document.location.href = "https://sawbla.de";
+        });
     }
 }
