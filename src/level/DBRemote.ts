@@ -8,13 +8,13 @@ export class DBRemote {
 
     constructor() {
         const firebaseConfig = {
-            apiKey: "AIzaSyCEX0hCOSuCrIdtb3b7KCgh9WCVFrQ3z14",
+            apiKey: "AIzaSyBs06uYTt7x3CTTE08u7hASosHA994KTwc",
             authDomain: "spectre-2149.firebaseapp.com",
             databaseURL: "https://spectre-2149-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "spectre-2149",
             storageBucket: "spectre-2149.appspot.com",
             messagingSenderId: "533897229462",
-            appId: "1:533897229462:web:73612cc05adae1c1b9beb7"
+            appId: "1:533897229462:web:63f5e5f2e39d8d24b9beb7"
         };
         firebase.initializeApp(firebaseConfig);
         this.databaseRef = firebase.database().ref();

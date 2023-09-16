@@ -1,6 +1,8 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true
+    "ranking": {
+      ".read": true,
+      ".write": true
+    }
   }
 }
