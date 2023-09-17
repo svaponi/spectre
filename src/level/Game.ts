@@ -12,6 +12,7 @@ import {Wall} from '../objects/wall';
 import {TrigonometryUtils} from '../utils/TrigonometryUtils';
 import {Utils} from '../utils/Utils';
 import {AUDIO} from '../audio/Audio';
+import {Agent} from "../utils/Agent";
 
 const FREE_CENTER_SIZE = 5;
 const HEIGHT = 1;
@@ -107,6 +108,12 @@ export class Game extends THREE.Object3D implements Refreshable {
 
     async initLevel(level: number = this.currentLevel) {
         if (this.pristine) {
+            if (Agent.isMobile()) {
+                await this.hud.centerText([{slideInText: 'Sorry, you cant play on mobile'}, {blink: 3}, {wait: 1000}, {clear: true}], 88);
+                await this.hud.centerText([{slideInText: 'Bye'}, {wait: 2000}], 100);
+                window.location.href = "https://sawbla.de"
+                await this.hud.centerText([{wait: 30000}]);
+            }
             AUDIO.preload();
             await this.hud.centerText([{slideInText: 'Press ENTER to start'}, {waitForKey: 'Enter'}, {clear: true}], 100);
             AUDIO.playWelcome({startIn: 200});
